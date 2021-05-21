@@ -1,45 +1,49 @@
-const axios = require('axios')
-const { mapping } = require('./mapping')
-const { mapResponse } = require('./functions')
+const axios = require("axios");
+const https = require("https");
+const { mapping } = require("./mapping");
+const { mapResponse } = require("./functions");
 
-function callInvesting (pairId) {
+function callInvesting(pairId) {
   return axios({
-    method: 'GET',
-    url: 'https://www.investing.com/common/modules/js_instrument_chart/api/data.php',
+    method: "GET",
+    url: "https://www.investing.com/common/modules/js_instrument_chart/api/data.php",
     params: {
       pair_id: pairId,
-      pair_interval: '86400', // 1 day
-      chart_type: 'area', // 'area', 'candlestick'
-      candle_count: '120', // days
-      volume_series: 'yes',
-      events: 'yes',
-      period: '1-year'
+      pair_interval: "86400", // 1 day
+      chart_type: "area", // 'area', 'candlestick'
+      candle_count: "120", // days
+      volume_series: "yes",
+      events: "yes",
+      period: "1-year",
     },
     headers: {
-      'Referer': 'https://www.investing.com/',
-      'X-Requested-With': 'XMLHttpRequest'
-    }
-  })
+      Referer: "https://www.investing.com/",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    httpsAgent: new https.Agent({
+      rejectUnauthorized: false,
+    }),
+  });
 }
 
-async function investing (input) {
+async function investing(input) {
   try {
     if (!input) {
-      throw Error('Parameter input is required')
+      throw Error("Parameter input is required");
     }
-    const endpoint = mapping[input]
+    const endpoint = mapping[input];
     if (!endpoint) {
-      throw Error(`No mapping found for ${input}, check mapping.js`)
+      throw Error(`No mapping found for ${input}, check mapping.js`);
     }
-    const response = await callInvesting(endpoint.pairId)
+    const response = await callInvesting(endpoint.pairId);
     if (!response.data.candles) {
-      throw Error('No response.data.candles found')
+      throw Error("No response.data.candles found");
     }
-    const results = mapResponse(response.data.candles)
-    return results
+    const results = mapResponse(response.data.candles);
+    return results;
   } catch (err) {
-    console.error(err.message)
+    console.error(err.message);
   }
 }
 
-exports.investing = investing
+exports.investing = investing;
